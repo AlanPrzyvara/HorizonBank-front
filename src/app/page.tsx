@@ -1,95 +1,81 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+"use client";
+
+import { useState, useEffect } from "react";
+import SideMenu from "../components/side-menu";
+import DarkModeSwitch from "../components/DarkModeSwitch";
+
+interface Item {
+  id: number;
+  text: string;
+  checked: boolean;
+}
 
 export default function Home() {
-  return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol>
-          <li>
-            Get started by editing <code>src/app/page.tsx</code>.
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const [darkMode, setDarkMode] = useState<boolean>(false);
+  const [items, setItems] = useState<Item[]>([
+    { id: 1, text: "Item 1", checked: false },
+    { id: 2, text: "Item 2", checked: false },
+    { id: 3, text: "Item 3", checked: false },
+  ]);
+  const [mounted, setMounted] = useState<boolean>(false);
 
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={styles.secondary}
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className={styles.footer}>
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) return null; // Evita erro de hidratação
+
+  const toggleDarkMode = () => setDarkMode(!darkMode);
+
+  const toggleCheckbox = (id: number) => {
+    setItems(items.map(item => 
+      item.id === id ? { ...item, checked: !item.checked } : item
+    ));
+  };
+
+  return (
+    <div style={{ 
+      display: "flex", // Adiciona layout em colunas
+      backgroundColor: darkMode ? "#222" : "#f9f9f9", 
+      color: darkMode ? "#fff" : "#000", 
+      minHeight: "100vh",
+      transition: "0.3s"
+    }}>
+      
+      {/* Menu lateral */}
+      <SideMenu />
+
+      {/* Conteúdo principal */}
+      <div style={{ flex: 1, padding: "20px" }}>
+        {/* Cabeçalho */}
+        <header style={{ display: "flex", justifyContent: "space-between", padding: "10px 20px", borderBottom: "2px solid #ccc" }}>
+          <h1>Horizon Bank</h1>
+          <DarkModeSwitch darkMode={darkMode} toggleDarkMode={toggleDarkMode} />
+        </header>
+
+        {/* Corpo */}
+        <main style={{ padding: "20px" }}>
+          <h2>Lista de Itens</h2>
+          <ul style={{ listStyle: "none", padding: 0 }}>
+            {items.map(item => (
+              <li key={item.id} style={{ marginBottom: "10px", display: "flex", alignItems: "center" }}>
+                <input 
+                  type="checkbox" 
+                  checked={item.checked} 
+                  onChange={() => toggleCheckbox(item.id)} 
+                  style={{ marginRight: "10px" }}
+                />
+                {item.text}
+              </li>
+            ))}
+          </ul>
+        </main>
+
+        {/* Rodapé */}
+        <footer style={{ padding: "10px 20px", borderTop: "2px solid #ccc", textAlign: "center", marginTop: "20px" }}>
+          <p>&copy; 2025 Horizon Bank - Todos os direitos reservados</p>
+        </footer>
+      </div>
     </div>
   );
 }
