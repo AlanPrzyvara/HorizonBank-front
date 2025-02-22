@@ -1,218 +1,235 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { ArrowUp, ArrowDown } from "lucide-react";
 import SideMenu from "../../components/side-menu";
 import DarkModeSwitch from "../../components/DarkModeSwitch";
-import { ArrowUp, ArrowDown } from "lucide-react";
+import styles from "./Transactions.module.css";
 
-const API_BASE_URL = "http://localhost:3001/accounts/1/transactions";
+interface Transaction {
+  id: string;
+  transaction_type: "credit" | "debit";
+  amount: number;
+  balance_before: number;
+  balance_after: number;
+  created_at: string;
+}
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
 export default function Transactions() {
   const [darkMode, setDarkMode] = useState(false);
-  const toggleDarkMode = () => setDarkMode(!darkMode);
   const [amount, setAmount] = useState("");
-
-  interface Transaction {
-    transaction_type: string;
-    amount: number;
-    balance_before: number;
-    balance_after: number;
-    created_at: string;
-  }
-
   const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState({ main: false, action: false });
   const [error, setError] = useState<string | null>(null);
 
+  const toggleDarkMode = () => setDarkMode(prev => !prev);
+
+  // Definição correta da função fetchTransactions
+  const fetchTransactions = async () => {
+    try {
+      setLoading(prev => ({ ...prev, main: true }));
+      const response = await fetch(`${API_BASE_URL}/accounts/1/transactions`);
+  
+      if (!response.ok) throw new Error("Failed to fetch transactions");
+  
+      const result = await response.json();
+      const transactions = result.transactions?.data || []; // Acessa corretamente a estrutura da API
+  
+      const formattedTransactions = transactions.map(({ attributes }: any) => ({
+        id: attributes.id,
+        transaction_type: attributes.transaction_type,
+        amount: Number(attributes.amount),
+        balance_before: Number(attributes.balance_before),
+        balance_after: Number(attributes.balance_after),
+        created_at: new Date(attributes.created_at).toISOString(),
+      }));
+  
+      setTransactions(formattedTransactions);
+    } catch (err) {
+      setError("Erro ao buscar transações");
+    } finally {
+      setLoading(prev => ({ ...prev, main: false }));
+    }
+  };
+
+  // Chama fetchTransactions ao montar o componente
   useEffect(() => {
     fetchTransactions();
   }, []);
 
-  const fetchTransactions = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch(API_BASE_URL);
-      if (!response.ok) throw new Error("Erro ao buscar transações");
-      const data = await response.json();
-      setTransactions(
-        data.transactions.data.map((t: any) => ({
-          transaction_type: t.attributes.transaction_type,
-          amount: parseFloat(t.attributes.amount),
-          balance_before: parseFloat(t.attributes.balance_before),
-          balance_after: parseFloat(t.attributes.balance_after),
-          created_at: new Date(t.attributes.created_at).toLocaleString(),
-        }))
-      );
-    } catch (err) {
-      setError("Erro ao buscar transações");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const handleTransaction = async (type: Transaction["transaction_type"]) => {
+    if (!validateAmount()) return;
 
-  const handleTransaction = async (type: string) => {
     try {
-      setLoading(true);
-      const response = await fetch(API_BASE_URL, {
+      setLoading(prev => ({ ...prev, action: true }));
+      
+      const response = await fetch(`${API_BASE_URL}/accounts/1/transactions`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          transaction: { transaction_type: type, amount: parseFloat(amount) },
+          transaction: { 
+            transaction_type: type, 
+            amount: Number(amount) 
+          },
         }),
       });
-      if (!response.ok) throw new Error("Erro ao processar transação");
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Erro ao processar transação");
+      }
+
       setAmount("");
-      fetchTransactions();
+      await fetchTransactions(); // Agora fetchTransactions está acessível corretamente
     } catch (err) {
       setError((err as Error).message);
     } finally {
-      setLoading(false);
+      setLoading(prev => ({ ...prev, action: false }));
     }
   };
 
+  const validateAmount = () => {
+    const value = parseFloat(amount);
+    if (isNaN(value) || value <= 0) {
+      setError("Valor inválido. Insira um número positivo.");
+      return false;
+    }
+    setError(null);
+    return true;
+  };
+
   return (
-    <div
-      style={{
-        display: "flex",
-        minHeight: "100vh",
-        backgroundColor: darkMode ? "#1a1a1a" : "#f9f9f9",
-        color: darkMode ? "#fff" : "#000",
-        transition: "0.3s",
-        overflowX: "hidden",
-      }}
-    >
+    <div className={`${styles.container} ${darkMode ? styles.dark : ""}`}>
       <SideMenu />
-      {/* Container principal para as áreas de transação e histórico */}
-      <div className="main-container" style={{ flex: 1 }}>
-        <div style={{ flex: 1, padding: "20px", display: "flex", justifyContent: "center" }}>
-          <div style={{ maxWidth: "400px", textAlign: "center" }}>
-            <header
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-              }}
-            >
-              <h1>Transações</h1>
-              <DarkModeSwitch darkMode={darkMode} toggleDarkMode={toggleDarkMode} />
-            </header>
-            <div>
-              <input
-                type="number"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                placeholder="Valor"
-                style={{ padding: "10px", marginRight: "10px", width: "100%" }}
-              />
-              <div style={{ display: "flex", justifyContent: "space-between", marginTop: "10px" }}>
-                <button
-                  onClick={() => handleTransaction("credit")}
-                  disabled={loading}
-                  style={{
-                    flex: 1,
-                    padding: "10px 20px",
-                    margin: "5px",
-                    backgroundColor: "#4CAF50",
-                    color: "white",
-                    border: "none",
-                    borderRadius: "5px",
-                  }}
-                >
-                  Depositar
-                </button>
-                <button
-                  onClick={() => handleTransaction("debit")}
-                  disabled={loading}
-                  style={{
-                    flex: 1,
-                    padding: "10px 20px",
-                    margin: "5px",
-                    backgroundColor: "#f44336",
-                    color: "white",
-                    border: "none",
-                    borderRadius: "5px",
-                  }}
-                >
-                  Sacar
-                </button>
-              </div>
-            </div>
-            {loading && <p>Carregando...</p>}
-            {error && <p style={{ color: "red" }}>{error}</p>}
+      
+      <main className={styles.mainContent}>
+        <header className={styles.header}>
+          <h1 className={styles.title}>Transações</h1>
+          <DarkModeSwitch
+            darkMode={darkMode}
+            toggleDarkMode={toggleDarkMode}
+          />
+        </header>
+
+        <section className={styles.transactionSection}>
+          <div className={styles.inputGroup}>
+            <label htmlFor="amount" className={styles.inputLabel}>
+              Valor (R$)
+            </label>
+            <input
+              id="amount"
+              type="number"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value.replace(/[^0-9.,]/g, ""))}
+              placeholder="0,00"
+              min="0"
+              step="0.01"
+              className={styles.amountInput}
+              disabled={loading.action}
+            />
           </div>
-        </div>
-        {/* Painel do histórico */}
-        <div
-          className="history-panel"
-          style={{
-            padding: "20px",
-            borderLeft: "1px solid #ccc",
-            display: "flex",
-            flexDirection: "column",
-            overflowY: "auto",
-            maxHeight: "100vh",
-          }}
-        >
-          <h2>Histórico</h2>
-          <ul style={{ listStyle: "none", padding: 0 }}>
-            {transactions.length > 0 ? (
-              transactions.map((t, index) => (
-                <li
-                  key={index}
-                  style={{
-                    backgroundColor: darkMode ? "#333" : "#fff",
-                    padding: "10px",
-                    borderRadius: "5px",
-                    marginBottom: "10px",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "10px",
-                  }}
-                >
-                  {t.transaction_type === "credit" ? (
-                    <ArrowUp color="green" />
-                  ) : (
-                    <ArrowDown color="red" />
-                  )}
-                  <div>
-                    <strong>
-                      {t.transaction_type === "credit" ? "CRÉDITO" : "DÉBITO"}
-                    </strong>{" "}
-                    - R$ {t.amount.toFixed(2)}
-                    <br />
-                    Saldo antes: R$ {t.balance_before.toFixed(2)} | Saldo depois: R$ {t.balance_after.toFixed(2)}
-                    <br />
-                    <small>{t.created_at}</small>
-                  </div>
-                </li>
-              ))
-            ) : (
-              <p>Nenhuma transação encontrada</p>
-            )}
-          </ul>
-        </div>
-      </div>
-      {/* Estilos responsivos */}
-      <style jsx>{`
-        .main-container {
-          display: flex;
-          flex-direction: row;
-        }
-        .history-panel {
-          width: 300px;
-          border-left: 1px solid #ccc;
-        }
-        @media (max-width: 600px) {
-          .main-container {
-            flex-direction: column;
-          }
-          .history-panel {
-            width: 100%;
-            border-left: none;
-            border-top: 1px solid #ccc;
-          }
-        }
-      `}</style>
+
+          <div className={styles.buttonGroup}>
+            <button
+              onClick={() => handleTransaction("credit")}
+              disabled={loading.action || !amount}
+              className={`${styles.button} ${styles.creditButton}`}
+              aria-label="Depositar valor"
+            >
+              {loading.action ? "Processando..." : "Depositar"}
+            </button>
+            <button
+              onClick={() => handleTransaction("debit")}
+              disabled={loading.action || !amount}
+              className={`${styles.button} ${styles.debitButton}`}
+              aria-label="Sacar valor"
+            >
+              {loading.action ? "Processando..." : "Sacar"}
+            </button>
+          </div>
+
+          {error && <p className={styles.errorMessage}>{error}</p>}
+        </section>
+
+        <TransactionHistory 
+          transactions={transactions} 
+          darkMode={darkMode}
+          loading={loading.main}
+        />
+      </main>
     </div>
   );
 }
+
+interface TransactionHistoryProps {
+  transactions: Transaction[];
+  darkMode: boolean;
+  loading: boolean;
+}
+
+const TransactionHistory = ({ transactions, darkMode, loading }: TransactionHistoryProps) => (
+  <aside className={`${styles.historyPanel} ${darkMode ? styles.dark : ""}`}>
+    <h2 className={styles.historyTitle}>Histórico</h2>
+    
+    {loading ? (
+      <div className={styles.loadingState}>
+        <div className={styles.loadingSpinner} />
+      </div>
+    ) : transactions.length === 0 ? (
+      <p className={styles.emptyState}>Nenhuma transação encontrada</p>
+    ) : (
+      <ul className={styles.transactionList}>
+        {transactions.map((transaction) => (
+          <TransactionItem 
+            key={transaction.id} 
+            transaction={transaction} 
+            darkMode={darkMode}
+          />
+        ))}
+      </ul>
+    )}
+  </aside>
+);
+
+const TransactionItem = ({ transaction, darkMode }: { transaction: Transaction; darkMode: boolean }) => {
+  const isCredit = transaction.transaction_type === "credit";
+  const date = new Date(transaction.created_at);
+  
+  return (
+    <li className={`${styles.transactionItem} ${darkMode ? styles.dark : ""}`}>
+      <div className={styles.transactionIcon}>
+        {isCredit ? (
+          <ArrowUp className={styles.creditIcon} />
+        ) : (
+          <ArrowDown className={styles.debitIcon} />
+        )}
+      </div>
+      
+      <div className={styles.transactionDetails}>
+        <div className={styles.transactionHeader}>
+          <span className={`${styles.transactionType} ${isCredit ? styles.credit : styles.debit}`}>
+            {isCredit ? "CRÉDITO" : "DÉBITO"}
+          </span>
+          <span className={styles.transactionAmount}>
+            R$ {transaction.amount.toFixed(2)}
+          </span>
+        </div>
+        
+        <div className={styles.balanceInfo}>
+          <span>Saldo anterior: R$ {transaction.balance_before.toFixed(2)}</span>
+          <span>Novo saldo: R$ {transaction.balance_after.toFixed(2)}</span>
+        </div>
+        
+        <time className={styles.transactionDate}>
+          {date.toLocaleDateString("pt-BR", {
+            day: "2-digit",
+            month: "long",
+            year: "numeric",
+          })} às {date.toLocaleTimeString("pt-BR")}
+        </time>
+      </div>
+    </li>
+  );
+};

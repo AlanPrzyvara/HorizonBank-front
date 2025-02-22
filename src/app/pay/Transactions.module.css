@@ -1,0 +1,300 @@
+/* Base Styles */
+.container {
+    display: flex;
+    min-height: 100vh;
+    background-color: var(--primary-light);
+    color: var(--text-light);
+    transition: var(--transition);
+    overflow: hidden;
+}
+
+.container.dark {
+    background-color: var(--primary-dark);
+    color: var(--text-dark);
+}
+
+/* Main Content */
+.mainContent {
+    flex: 1;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    overflow: hidden;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.title {
+    font-size: 2rem;
+    font-weight: 700;
+}
+
+/* Transaction Section */
+.transactionSection {
+    max-width: 500px;
+    width: 100%;
+    margin: 0 auto;
+}
+
+.inputGroup {
+    margin-bottom: 1.5rem;
+}
+
+.inputLabel {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+}
+
+.amountInput {
+    width: 100%;
+    padding: 1rem;
+    border: 2px solid #ddd;
+    border-radius: var(--border-radius);
+    font-size: 1.1rem;
+    transition: var(--transition);
+}
+
+.amountInput:focus {
+    border-color: var(--success);
+    outline: none;
+}
+
+.buttonGroup {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+.button {
+    padding: 1rem 2rem;
+    border: none;
+    border-radius: var(--border-radius);
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.button:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.creditButton {
+    background-color: var(--success);
+    color: white;
+}
+
+.creditButton:hover:not(:disabled) {
+    filter: brightness(0.9);
+}
+
+.debitButton {
+    background-color: var(--error);
+    color: white;
+}
+
+.debitButton:hover:not(:disabled) {
+    filter: brightness(0.9);
+}
+
+/* History Panel */
+.historyPanel {
+    width: 100%;
+    max-width: 100%;
+    padding: 1rem;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-left: 1px solid #ddd;
+    max-height: 660px;
+    overflow-y: auto;
+}
+
+.historyPanel::-webkit-scrollbar {
+    width: 6px;
+}
+
+.historyPanel::-webkit-scrollbar-thumb {
+    background-color: #ccc;
+    border-radius: 3px;
+}
+
+.historyPanel::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.dark .historyPanel {
+    background-color: rgba(0, 0, 0, 0.1);
+    border-color: #444;
+}
+
+.historyTitle {
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.transactionList {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+/* Transaction Item */
+.transactionItem {
+    padding: 1.5rem;
+    background-color: white;
+    border-radius: var(--border-radius);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.dark .transactionItem {
+    background-color: #333;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.transactionIcon svg {
+    width: 24px;
+    height: 24px;
+}
+
+.creditIcon {
+    color: var(--success);
+}
+
+.debitIcon {
+    color: var(--error);
+}
+
+.transactionDetails {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.transactionHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.transactionType {
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.9rem;
+}
+
+.transactionType.credit {
+    color: var(--success);
+}
+
+.transactionType.debit {
+    color: var(--error);
+}
+
+.transactionAmount {
+    font-weight: 700;
+}
+
+.balanceInfo {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    font-size: 0.9rem;
+    opacity: 0.8;
+}
+
+.transactionDate {
+    font-size: 0.8rem;
+    opacity: 0.7;
+}
+
+/* Loading States */
+.loadingState {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+}
+
+.loadingSpinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid var(--success);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+.errorMessage {
+    color: var(--error);
+    padding: 1rem;
+    background-color: rgba(244, 67, 54, 0.1);
+    border-radius: var(--border-radius);
+    margin-top: 1rem;
+}
+
+.emptyState {
+    text-align: center;
+    opacity: 0.7;
+    padding: 2rem;
+}
+
+/* Responsive Design */
+@media (max-width: 600px) {
+    .transactionSection {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .buttonGroup {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .button {
+        min-width: 100%;
+    }
+
+    .transactionItem {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .transactionIcon {
+        width: 32px;
+        height: 32px;
+    }
+
+    .transactionDetails {
+        width: 100%;
+    }
+
+    .historyPanel {
+        max-height: 560px;
+        max-width: 100%;
+        /* Ajusta a altura para telas menores */
+    }
+}
