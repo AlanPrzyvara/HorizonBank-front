@@ -11,6 +11,7 @@ interface Account {
   id: string;
   name: string;
   balance: number;
+  document: string;
 }
 
 interface Transaction {
@@ -50,7 +51,7 @@ export default function Transfer() {
       const fetchedAccounts = result.accounts.data.map((account: any) => ({
         id: account.id,
         name: account.attributes.name,
-        balance: parseFloat(account.attributes.balance),
+        document: account.attributes.document,
       }));
       setAccounts(fetchedAccounts);
     } catch (err) {
@@ -154,7 +155,7 @@ export default function Transfer() {
               <option value="">Selecione uma conta</option>
               {accounts.map((account) => (
                 <option key={account.id} value={account.id}>
-                  {account.name} - Saldo: R${account.balance.toFixed(2)}
+                  {account.name} - Documento : {account.document}
                 </option>
               ))}
             </select>
