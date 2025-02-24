@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import React, { useState, useEffect } from "react";
-import { Home, Info, Banknote, Mail } from "lucide-react";
+import { Home, Info,HandCoins ,Banknote, Mail } from "lucide-react";
 
 const SideMenu: React.FC = () => {
   const router = useRouter();
@@ -26,8 +26,9 @@ const SideMenu: React.FC = () => {
   const menuItems = [
     { id: 1, label: "Início", icon: <Home />, path: "/" },
     { id: 2, label: "Sobre", icon: <Info />, path: "/about" },
-    { id: 3, label: "Transferencias", icon: <Banknote />, path: "/pay" },
-    { id: 4, label: "Contato", icon: <Mail />, path: "/contact" },
+    { id: 3, label: "Saque/Deposito", icon: <HandCoins />, path: "/pay" },
+    { id: 4, label: "Transferencias", icon: <Banknote />, path: "/transfer" },
+    { id: 6, label: "Contato", icon: <Mail />, path: "/contact" },
   ];
 
   return (
